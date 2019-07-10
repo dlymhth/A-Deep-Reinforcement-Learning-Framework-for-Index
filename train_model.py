@@ -96,12 +96,8 @@ class NNAgent:
                                                     self.last_w: last_w})
             # Write output_w into train_matrix_w
             dataset.set_w(rand_i, output_w)
-            #print(loss)
             if epoch % self.display_step == 0:
                 print(loss)
-                print(last_w[0])
-                print(input_x)
-                #print(input_y)
                 print(output_w[0])
 
         sess.close()
