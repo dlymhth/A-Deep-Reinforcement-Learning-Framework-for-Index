@@ -29,8 +29,10 @@ class NNAgent:
         self.decay_steps = parameters.decay_steps
         self.decay_rate = parameters.decay_rate
 
+        self.commission_rate = parameters.commission_rate
+
         # tf Graph
-        # [32, 50, 7, 3]
+        # input_x shape [32, 50, 7, 3]
         self.X = tf.placeholder('float32', [self.n_batch, self.n_timesteps,
                                             self.n_varieties, self.n_features])
 
@@ -60,14 +62,18 @@ class NNAgent:
         self.output_w = tf.nn.softmax(tf.squeeze(raw_cov_layer3), axis=1) # [32, 7]
 
         # Define loss and optimizer
-        self.loss = tf.losses.mean_squared_error(self.last_w, self.output_w)
+        # input_y shape [32, 7]
+        self.y = tf.placeholder('float32', [self.n_batch, self.n_varieties])
+        omega_y = tf.reduce_sum(tf.multiply(tf.squeeze(self.y), self.output_w), axis=1)
+        
+        self.loss = -tf.reduce_mean(tf.log(omega_y))
 
         self.global_step = tf.Variable(0, trainable=False)
         self.learning_rate = tf.train.exponential_decay(learning_rate=self.start_learning_rate,
                                                         global_step=self.global_step,
                                                         decay_steps=self.decay_steps,
                                                         decay_rate=self.decay_rate)
-        self.optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
+        self.optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.train_op = self.optimizer.minimize(self.loss, global_step=self.global_step)
 
         self.config = tf.ConfigProto(log_device_placement=False,
@@ -82,15 +88,21 @@ class NNAgent:
         sess.run(init)
 
         # Training
-        for epoch in range(1):
+        for epoch in range(self.n_epochs):
             rand_i, input_x, input_y, last_w = dataset.next_batch()
             _, loss, output_w = sess.run([self.train_op, self.loss, self.output_w],
                                          feed_dict={self.X: input_x,
+                                                    self.y: input_y,
                                                     self.last_w: last_w})
             # Write output_w into train_matrix_w
             dataset.set_w(rand_i, output_w)
+            #print(loss)
             if epoch % self.display_step == 0:
                 print(loss)
+                print(last_w[0])
+                print(input_x)
+                #print(input_y)
+                print(output_w[0])
 
         sess.close()
         print('Training done.')

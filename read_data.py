@@ -58,8 +58,8 @@ class Dataset:
         for i in range(self.n_batch):
             array_list.append(self.train_dataset[rand_i + i - 1:rand_i + self.n_timesteps + i,:,:])
         input_data = np.stack(array_list, axis=0) # [n_batch, n_timesteps + 1, n_varieties, n_features]
-        input_x = input_data[:,:-1,:,:]
-        input_y = input_data[:,-1,:,:] / input_data[:,-2,:,0,None]
+        input_x = input_data[:,:-1,:,:] # [n_batch, n_timesteps, n_varieties, n_features]
+        input_y = input_data[:,-1,:,0] / input_data[:,-2,:,0] # [n_batch, n_varieties]
         # Get last_w for training
         last_w = self.train_matrix_w[rand_i + self.n_timesteps - 1:rand_i + self.n_timesteps + self.n_batch - 1,:]
         return rand_i, input_x, input_y, last_w

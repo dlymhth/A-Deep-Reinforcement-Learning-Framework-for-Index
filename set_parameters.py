@@ -33,8 +33,10 @@ class Parameters:
         self.n_epochs = int(10e5)
         self.display_step = int(10e2)
 
-        self.start_learning_rate = 0.01
+        self.start_learning_rate = 0.001
         self.decay_steps = 10e3
         self.decay_rate = 0.1
+
+        self.commission_rate = 0.001
 
 parameters = Parameters()
