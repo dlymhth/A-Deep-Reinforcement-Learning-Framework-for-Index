@@ -87,9 +87,9 @@ for variety in variety_list:
                                                  sort=False).sort_index().reset_index(drop=True)
         
         df_date_list.append(df_date)
-    
+
     df_clean = pd.concat(df_date_list, ignore_index=True, sort=False)
     print(df_clean.shape)
     df_clean.to_csv(working_space + 'day&night/' + variety + '_minutes_clean.csv')
-    
+
     os.remove(working_space + 'day&night/' + variety + '_minutes.csv')
