@@ -34,6 +34,7 @@ class NNAgent:
         self.commission_rate = parameters.commission_rate
 
         self.model_file_location = parameters.model_file_location
+        self.figure_file_location = parameters.figure_file_location
 
         # tf Graph
         # input_x shape [n_batch, 50, 7, 3]
@@ -162,21 +163,20 @@ class NNAgent:
 
         rr_vec = p_vec * mu
         rr_vec = np.concatenate((np.ones(1), rr_vec), axis=0)
-
         result_list = [1]
         for i in range(len(rr_vec)):
             result_list.append(result_list[-1] * rr_vec[i])
+
+        # Identity weights
+        rr_vec_control = np.sum(y, axis=1) / 7
+        rr_vec_control = np.concatenate((np.ones(1), rr_vec_control), axis=0)
+
+        result_list_control = [1]
+        for i in range(len(rr_vec_control)):
+            result_list_control.append(result_list_control[-1] * rr_vec_control[i])
+
+        fig_1 = plt.figure(figsize=(16, 9))
         plt.plot(result_list, label='test')
-
-    def plot_control_result(self, dataset):
-
-        matrix_y = dataset.test_dataset
-        y = matrix_y[1:,:,0] / matrix_y[:-1,:,0]
-        rr_vec = np.sum(y, axis=1) / 7
-        rr_vec = np.concatenate((np.ones(1), rr_vec), axis=0)
-
-        result_list = [1]
-        for i in range(len(rr_vec)):
-            result_list.append(result_list[-1] * rr_vec[i])
-        plt.plot(result_list, label='control')
+        plt.plot(result_list_control, label='control')
         plt.legend()
+        fig_1.savefig(self.figure_file_location + 'fig_1.jpg')

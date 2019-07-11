@@ -11,6 +11,7 @@ class Parameters:
         # File location
         self.data_file_location = 'C:/HTH/DFIT/reinforcement/data/'
         self.model_file_location = 'C:/HTH/DFIT/reinforcement/model/model_0'
+        self.figure_file_location = 'C:/HTH/DFIT/reinforcement/'
 
         # Input data
         self.varieties = ['a', 'i', 'j', 'jm',

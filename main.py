@@ -22,4 +22,3 @@ if __name__ == '__main__':
     test_matrix_w = dataset.test_matrix_w
 
     model.plot_test_result(dataset)
-    model.plot_control_result(dataset)
