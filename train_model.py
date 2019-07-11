@@ -68,9 +68,15 @@ class NNAgent:
         # Define loss and optimizer
         # input_y shape [n_batch, 7]
         self.y = tf.placeholder('float32', [None, self.n_varieties])
-        omega_y = tf.reduce_sum(tf.multiply(tf.squeeze(self.y), self.output_w), axis=1)
-        
-        self.loss = -tf.reduce_mean(tf.log(omega_y))
+        omega_y = tf.reduce_sum(tf.multiply(self.y, self.output_w), axis=1) # [n_batch]
+
+        future_omega = tf.multiply(self.y, self.output_w) / omega_y[:,None] # [n_batch,7]
+        w_t = future_omega[:-1,:]
+        w_t_1 = self.output_w[1:,:]
+        mu = 1 - tf.reduce_sum(tf.abs(w_t - w_t_1), axis=1) * self.commission_rate # [n_batch-1]
+
+        p_vec = tf.multiply(omega_y, tf.concat([tf.ones(1, dtype='float32'), mu], axis=0)) # [n_batch]
+        self.loss = -tf.reduce_mean(tf.log(p_vec))
 
         self.global_step = tf.Variable(0, trainable=False)
         self.learning_rate = tf.train.exponential_decay(learning_rate=self.start_learning_rate,
