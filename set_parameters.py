@@ -10,6 +10,7 @@ class Parameters:
     def __init__(self):
         # File location
         self.data_file_location = 'C:/HTH/DFIT/reinforcement/data/'
+        self.model_file_location = 'C:/HTH/DFIT/reinforcement/model/model_0'
 
         # Input data
         self.varieties = ['a', 'i', 'j', 'jm',
@@ -31,7 +32,7 @@ class Parameters:
 
         # Training
         self.n_epochs = int(10e5)
-        self.display_step = int(10e1)
+        self.display_step = int(10e2)
 
         self.start_learning_rate = 0.001
         self.decay_steps = 10e3

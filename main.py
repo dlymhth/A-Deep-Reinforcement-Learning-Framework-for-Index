@@ -16,3 +16,9 @@ if __name__ == '__main__':
 
     model = train_model.NNAgent(parameters)
     model.train(dataset)
+    train_matrix_w = dataset.train_matrix_w
+
+    model.test(dataset)
+    test_matrix_w = dataset.test_matrix_w
+
+    model.plot_test_result(dataset)

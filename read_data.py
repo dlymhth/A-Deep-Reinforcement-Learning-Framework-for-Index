@@ -53,7 +53,7 @@ class Dataset:
 
     def next_batch(self):
         #Stack dataset on the 1st direction of moving time window
-        rand_i = random.randint(1, self.n_train - self.n_timesteps - self.n_batch)
+        rand_i = random.randint(0, self.n_train - self.n_timesteps - self.n_batch)
         array_list = []
         for i in range(self.n_batch):
             array_list.append(self.train_dataset[rand_i + i - 1:rand_i + self.n_timesteps + i,:,:])

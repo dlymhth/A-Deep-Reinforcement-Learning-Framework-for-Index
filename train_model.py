@@ -5,7 +5,9 @@ Created on Tue Jul  9 16:05:39 2019
 @author: dlymhth
 """
 
+import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 class NNAgent:
 
@@ -31,39 +33,41 @@ class NNAgent:
 
         self.commission_rate = parameters.commission_rate
 
+        self.model_file_location = parameters.model_file_location
+
         # tf Graph
-        # input_x shape [32, 50, 7, 3]
-        self.X = tf.placeholder('float32', [self.n_batch, self.n_timesteps,
+        # input_x shape [n_batch, 50, 7, 3]
+        self.X = tf.placeholder('float32', [None, self.n_timesteps,
                                             self.n_varieties, self.n_features])
 
         # Cov 1 core: [height: 3, width: 1, in_channels: 3, out_channels: 2]
         cov1_core = tf.Variable(tf.random_normal([self.height_cov1, 1,
                                                   self.n_features, self.n_cov1_core]))
         raw_cov_layer1 = tf.nn.conv2d(input=self.X, filter=cov1_core,
-                                      strides=[1, 1, 1, 1], padding='VALID') # [32, 48, 7, 2]
+                                      strides=[1, 1, 1, 1], padding='VALID') # [n_batch, 48, 7, 2]
         cov_layer1 = tf.nn.relu(raw_cov_layer1)
 
         # Cov 2 core: [height: 48, width: 1, in_channels: 2, out_channels: 20]
         cov2_core = tf.Variable(tf.random_normal([self.height_cov2, 1,
                                                   self.n_cov1_core, self.n_cov2_core]))
         raw_cov_layer2 = tf.nn.conv2d(input=cov_layer1, filter=cov2_core,
-                                      strides=[1, 1, 1, 1], padding='VALID') # [32, 1, 7, 20]
+                                      strides=[1, 1, 1, 1], padding='VALID') # [n_batch, 1, 7, 20]
         cov_layer2 = tf.nn.relu(raw_cov_layer2)
 
-        self.last_w = tf.placeholder('float32', [self.n_batch, self.n_varieties]) # [32, 7]
-        last_w_1 = tf.expand_dims(self.last_w, axis=1) # [32, 1, 7]
-        last_w_2 = tf.expand_dims(last_w_1, axis=3) # [32, 1, 7, 1]
-        concat_layer = tf.concat([cov_layer2, last_w_2], axis=3) # [32, 1, 7, 21]
+        self.last_w = tf.placeholder('float32', [None, self.n_varieties]) # [n_batch, 7]
+        last_w_1 = tf.expand_dims(self.last_w, axis=1) # [n_batch, 1, 7]
+        last_w_2 = tf.expand_dims(last_w_1, axis=3) # [n_batch, 1, 7, 1]
+        concat_layer = tf.concat([cov_layer2, last_w_2], axis=3) # [n_batch, 1, 7, 21]
 
         # Cov 3 core: [height: 1, width: 1, in_channels: 21, out_channels: 1]
         cov3_core = tf.Variable(tf.random_normal([1, 1, self.height_cov3, 1]))
         raw_cov_layer3 = tf.nn.conv2d(input=concat_layer, filter=cov3_core,
-                                      strides=[1, 1, 1, 1], padding='VALID') # [32, 1, 7, 1]
-        self.output_w = tf.nn.softmax(tf.squeeze(raw_cov_layer3), axis=1) # [32, 7]
+                                      strides=[1, 1, 1, 1], padding='VALID') # [n_batch, 1, 7, 1]
+        self.output_w = tf.nn.softmax(tf.squeeze(raw_cov_layer3)) # [n_batch, 7]
 
         # Define loss and optimizer
-        # input_y shape [32, 7]
-        self.y = tf.placeholder('float32', [self.n_batch, self.n_varieties])
+        # input_y shape [n_batch, 7]
+        self.y = tf.placeholder('float32', [None, self.n_varieties])
         omega_y = tf.reduce_sum(tf.multiply(tf.squeeze(self.y), self.output_w), axis=1)
         
         self.loss = -tf.reduce_mean(tf.log(omega_y))
@@ -81,6 +85,7 @@ class NNAgent:
 
     def train(self, dataset):
 
+        print('\nTraining start...')
         init = tf.global_variables_initializer()
         sess = tf.Session(config=self.config)
 
@@ -90,15 +95,55 @@ class NNAgent:
         # Training
         for epoch in range(self.n_epochs):
             rand_i, input_x, input_y, last_w = dataset.next_batch()
+# =============================================================================
+#             # check data
+#             assert not np.any(np.isnan(input_x))
+#             assert not np.any(np.isnan(input_y))
+#             assert not np.any(np.isnan(last_w))
+# =============================================================================
+            # calculate output_w
             _, loss, output_w = sess.run([self.train_op, self.loss, self.output_w],
                                          feed_dict={self.X: input_x,
                                                     self.y: input_y,
                                                     self.last_w: last_w})
             # Write output_w into train_matrix_w
             dataset.set_w(rand_i, output_w)
+            # Display
             if epoch % self.display_step == 0:
                 print(loss)
-                print(output_w[0])
+
+        # Save model
+        saver = tf.train.Saver()
+        saver.save(sess, self.model_file_location)
 
         sess.close()
         print('Training done.')
+
+    def test(self, dataset):
+        print('\nTesting')
+        n_test = dataset.n_test
+        n_timesteps = dataset.n_timesteps
+
+        sess = tf.Session(config=self.config)
+        saver = tf.train.Saver()
+        saver.restore(sess, self.model_file_location)
+
+        for i in range(0, n_test - n_timesteps):
+            input_data = dataset.test_dataset[None,i:n_timesteps + i + 1,:,:] # [1, 51, 7, 3]
+            input_x = input_data[:,:-1,:,:] / input_data[:,-2,None,:,0,None] # [1, 50, 7, 3]
+            input_y = input_data[:,-1,:,0] / input_data[:,-2,:,0] # [1, 7]
+            last_w = dataset.test_matrix_w[n_timesteps + i - 1,None,:] # [1, 7]
+
+            output_w = sess.run(self.output_w, feed_dict={self.X: input_x,
+                                                          self.y: input_y,
+                                                          self.last_w: last_w})
+            dataset.test_matrix_w[n_timesteps + i,:] = output_w
+
+        sess.close()
+        print('Test done.')
+
+    def plot_test_result(self, dataset):
+
+        value_vec = np.sum(dataset.test_matrix_w * dataset.test_dataset[:,:,0], axis=1)
+
+        plt.plot(value_vec)
