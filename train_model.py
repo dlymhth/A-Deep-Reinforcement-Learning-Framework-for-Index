@@ -150,6 +150,18 @@ class NNAgent:
 
     def plot_test_result(self, dataset):
 
-        value_vec = np.sum(dataset.test_matrix_w * dataset.test_dataset[:,:,0], axis=1)
+        matrix_y = dataset.test_dataset
+        matrix_w = dataset.test_matrix_w
+        y = matrix_y[1:,:,0] / matrix_y[:-1,:,0]
+
+        p_vec = np.sum(matrix_w[:-1,:] * y, axis=1)
+        
+
+        w_t = (matrix_w[:-1,:] * y) / p_vec[:,None]
+        w_t_1 = matrix_w[1:,:]
+        mu = 1 - np.sum(abs(w_t - w_t_1), axis=1) * self.commission_rate
+
+        value_vec = p_vec * mu
+        value_vec = np.concatenate((np.ones(1), value_vec), axis=0)
 
         plt.plot(value_vec)
