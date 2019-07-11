@@ -155,13 +155,28 @@ class NNAgent:
         y = matrix_y[1:,:,0] / matrix_y[:-1,:,0]
 
         p_vec = np.sum(matrix_w[:-1,:] * y, axis=1)
-        
 
         w_t = (matrix_w[:-1,:] * y) / p_vec[:,None]
         w_t_1 = matrix_w[1:,:]
         mu = 1 - np.sum(abs(w_t - w_t_1), axis=1) * self.commission_rate
 
-        value_vec = p_vec * mu
-        value_vec = np.concatenate((np.ones(1), value_vec), axis=0)
+        rr_vec = p_vec * mu
+        rr_vec = np.concatenate((np.ones(1), rr_vec), axis=0)
 
-        plt.plot(value_vec)
+        result_list = [1]
+        for i in range(len(rr_vec)):
+            result_list.append(result_list[-1] * rr_vec[i])
+        plt.plot(result_list, label='test')
+
+    def plot_control_result(self, dataset):
+
+        matrix_y = dataset.test_dataset
+        y = matrix_y[1:,:,0] / matrix_y[:-1,:,0]
+        rr_vec = np.sum(y, axis=1) / 7
+        rr_vec = np.concatenate((np.ones(1), rr_vec), axis=0)
+
+        result_list = [1]
+        for i in range(len(rr_vec)):
+            result_list.append(result_list[-1] * rr_vec[i])
+        plt.plot(result_list, label='control')
+        plt.legend()
