@@ -168,7 +168,7 @@ class NNAgent:
             result_list.append(result_list[-1] * rr_vec[i])
 
         # Identity weights
-        rr_vec_control = np.sum(y, axis=1) / 7
+        rr_vec_control = np.sum(y, axis=1) / self.n_varieties
         rr_vec_control = np.concatenate((np.ones(1), rr_vec_control), axis=0)
 
         result_list_control = [1]
