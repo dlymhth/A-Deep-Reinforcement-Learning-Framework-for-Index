@@ -9,7 +9,7 @@ class Parameters:
 
     def __init__(self):
         # File location
-        self.data_file_location = 'C:/HTH/DFIT/reinforcement/data/'
+        self.data_file_location = 'C:/HTH/DFIT/reinforcement/data_5/'
         self.model_file_location = 'C:/HTH/DFIT/reinforcement/model/model_0'
         self.figure_file_location = 'C:/HTH/DFIT/reinforcement/'
 
@@ -19,7 +19,7 @@ class Parameters:
         self.features = ['new.price',
                          'last.minute.high.price',
                          'last.minute.low.price']
-        self.train_data_rate = 0.7
+        self.train_data_rate = 0.5
 
         # Model structure
         self.n_timesteps = 50
@@ -32,13 +32,13 @@ class Parameters:
         self.height_cov3 = self.n_cov2_core + 1
 
         # Training
-        self.n_epochs = int(10e5)
-        self.display_step = int(10e2)
+        self.n_epochs = int(1e4)
+        self.display_step = int(1e3)
 
         self.start_learning_rate = 0.001
-        self.decay_steps = 10e3
+        self.decay_steps = 1e4
         self.decay_rate = 0.1
 
-        self.commission_rate = 0.001
+        self.commission_rate = 0.0001
 
 parameters = Parameters()

@@ -151,10 +151,15 @@ class NNAgent:
 
     def plot_test_result(self, dataset):
 
-        matrix_y = dataset.test_dataset
-        matrix_w = dataset.test_matrix_w
-        y = matrix_y[1:,:,0] / matrix_y[:-1,:,0]
+        matrix_y = dataset.test_dataset.copy()
+        matrix_w = dataset.test_matrix_w.copy()
 
+        # changing weights less frequently
+        for i in range(1, matrix_w.shape[0]):
+            if i % 60 != 0:
+                matrix_w[i, :] = matrix_w[i - 1, :]
+
+        y = matrix_y[1:,:,0] / matrix_y[:-1,:,0]
         p_vec = np.sum(matrix_w[:-1,:] * y, axis=1)
 
         w_t = (matrix_w[:-1,:] * y) / p_vec[:,None]

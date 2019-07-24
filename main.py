@@ -21,4 +21,4 @@ if __name__ == '__main__':
     model.test(dataset)
     test_matrix_w = dataset.test_matrix_w
 
-    model.plot_test_result(dataset)
+    matrix_w = model.plot_test_result(dataset)
