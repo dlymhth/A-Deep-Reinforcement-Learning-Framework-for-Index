@@ -1,1 +1,1 @@
-- 数据以分钟为单位；
+- time interval is one minute;
